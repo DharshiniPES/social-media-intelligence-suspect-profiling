@@ -1,0 +1,70 @@
+[
+{
+  "id":"A1",
+  "person_id":"P1",
+  "platform":"Twitter",
+  "username":"cyb3r_hunter_27",
+  "bio":"Cybersecurity enthusiast | OSINT | Python",
+  "posts":"I love OSINT research!!! 🔥🔥 Python automation is amazing 😎",
+  "active_hours":[21,22,23,0,1],
+  "links":[
+    "github.com/cyberhunter",
+    "cyberhunter.dev"
+  ],
+  "hashtags":[
+    "#OSINT",
+    "#Python",
+    "#ThreatIntel"
+]
+},
+{
+  "id":"B1",
+  "person_id":"P1",
+  "platform":"Reddit",
+  "username":"cyberhunter27",
+  "bio":"OSINT researcher and Python developer",
+  "posts":"Python automation is amazing 🔥😎 OSINT investigations are fun",
+  "active_hours":[20,21,22,23,1],
+  "links":[
+    "github.com/cyberhunter"
+  ],
+  "hashtags":[
+    "#OSINT",
+    "#Python",
+    "#DigitalForensics"
+]
+},
+{
+  "id":"C1",
+  "person_id":"P2",
+  "platform":"Twitter",
+  "username":"footballfan99",
+  "bio":"Football lover and sports enthusiast",
+  "posts":"Football is life ⚽⚽🏆",
+  "active_hours":[8,9,10,11],
+  "links":[
+    "espn.com"
+  ],
+  "hashtags":[
+    "#Football",
+    "#PremierLeague"
+]
+},
+{
+  "id":"D1",
+  "person_id":"P3",
+  "platform":"Instagram",
+  "username":"python_coder",
+  "bio":"Python developer and AI enthusiast",
+  "posts":"Building AI tools 🤖 with Python 🚀",
+  "active_hours":[14,15,16,17],
+  "links":[
+    "github.com/pythoncoder"
+  ],
+  "hashtags":[
+    "#Python",
+    "#AI",
+    "#MachineLearning"
+]
+}
+]
