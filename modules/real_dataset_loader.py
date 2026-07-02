@@ -1,3 +1,4 @@
+from modules.emoji_analysis import extract_emojis
 import pandas as pd
 import re
 
@@ -30,7 +31,7 @@ class RealDatasetLoader:
                 r"https?://[^\s]+",
                 tweet
             )
-            emojis=[]
+            emojis=extract_emojis(tweet)
 
             profile = {
 

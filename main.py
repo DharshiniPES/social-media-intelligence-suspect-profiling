@@ -31,19 +31,11 @@ tp = 0
 fp = 0
 fn = 0
 tn = 0
-with open(
-    "data/profiles.json",
-    "r",
-    encoding="utf-8"
-) as file:
 
-    from modules.real_dataset_loader import RealDatasetLoader
+from modules.real_dataset_loader import RealDatasetLoader
 
-    loader = RealDatasetLoader(
-        "datasets/real/bot_detection_data.csv"
-    )
-
-    profiles = loader.load_profiles()
+loader = RealDatasetLoader("datasets/real/bot_detection_data.csv")
+profiles = loader.load_profiles(limit=100)
 
 db = DatabaseManager()
 
@@ -126,9 +118,9 @@ for i in range(len(profiles)):
             explanations
         )
         risk_score = bot_risk_score(
-            profile1["followers"],
-            profile1["retweets"],
-            profile1["verified"]
+            profile1.get("followers", 0),
+            profile1.get("retweets", 0),
+            profile1.get("verified", False)
         )
         print("Bot Risk Score:", round(risk_score, 3))
         print("\n========================================")
@@ -219,7 +211,7 @@ for i in range(len(profiles)):
         print("F1 Score:", round(f1, 3))
 
         predicted =(
-            final_score >= 0.45
+            final_score >= 0.65
         )
 
         db.insert_comparison(

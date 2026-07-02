@@ -1,4 +1,5 @@
 import networkx as nx
+import networkx.algorithms.community as nx_comm
 import matplotlib.pyplot as plt
 from pyvis.network import Network
 
@@ -69,12 +70,8 @@ def draw_graph(G):
 
 
 def detect_communities(G):
-
-    communities = list(
-        nx.connected_components(G)
-    )
-
-    return communities
+    communities = nx_comm.louvain_communities(G, weight='weight')
+    return [set(c) for c in communities]
 
 
 def calculate_centrality(G):

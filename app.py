@@ -27,10 +27,7 @@ from modules.contribution_engine import (
 
 from modules.real_dataset_loader import RealDatasetLoader
 
-loader = RealDatasetLoader(
-    "datasets/real/bot_detection_data.csv"
-)
-
+loader = RealDatasetLoader("datasets/real/bot_detection_data.csv")
 profiles = loader.load_profiles(limit=100)
 
 df = pd.DataFrame(profiles)
