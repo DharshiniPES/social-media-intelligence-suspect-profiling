@@ -1,6 +1,7 @@
 import re
+import spacy
 from urllib.parse import urlparse
-
+nlp = spacy.load("en_core_web_sm")
 def extract_advanced_pivots(text):
     """
     Scans unstructured text (tweets, bios, or posts) to extract high-value
@@ -9,22 +10,78 @@ def extract_advanced_pivots(text):
     # 1. Regex patterns for core infrastructure
     email_pattern = r'[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}'
     # Matches various phone patterns (e.g., +91 98765 43210, 123-456-7890)
-    phone_pattern = r'\+?\d{1,4}?[-.\s]?\(?\d{1,3}?\)?[-.\s]?\d{1,4}[-.\s]?\d{1,4}[-.\s]?\d{1,9}'
+    phone_pattern = (
+        r"(?:\+?\d{1,3}[\s-]?)?"
+        r"(?:\(?\d{2,4}\)?[\s-]?)?"
+        r"\d{3,4}[\s-]?\d{3,4}"
+    )
     url_pattern = r'https?://[^\s]+'
     
     # 2. Regex signatures for common mobile devices/phone models
     # This catches strings like "Sent from my iPhone 15", "Pixel 8 Pro", "Samsung S24"
     device_pattern = r'(iphone\s?\d*|ipad|android|samsung\s?s\d+|pixel\s?\d+|oneplus|xiaomi)'
     
-    # 3. Basic keyword extractor for explicit locations (e.g., "Based in Bangalore", "Lives in Mumbai")
-    location_keywords = r'(?:lives\s+in|based\s+in|location:?|from\s+)\s*([a-zA-Z\s]+)'
-
     # Find matches (case-insensitive for text fields)
     emails = re.findall(email_pattern, text)
-    phones = re.findall(phone_pattern, text)
+    raw_phones = re.findall(phone_pattern, text)
+
+    phones = []
+
+    for phone in raw_phones:
+
+        digits = re.sub(r"\D", "", phone)
+
+        # Valid phone numbers should have 10–15 digits
+        if len(digits) < 10 or len(digits) > 15:
+            continue
+
+        # Reject numbers made of mostly repeated digits
+        if len(set(digits)) <= 2:
+            continue
+
+        # Reject code-like numeric sequences
+        groups = phone.split()
+
+        if len(groups) > 2:
+            continue
+
+        phones.append(phone.strip())
+
+    phones = sorted(set(phones))
     urls = re.findall(url_pattern, text)
     devices = re.findall(device_pattern, text.lower())
-    locations = re.findall(location_keywords, text.lower())
+    doc = nlp(text)
+
+    locations = []
+
+    blacklist = {
+        "Flask",
+        "Bottle",
+        "Pyramid",
+        "Tornado",
+        "Python",
+        "Django",
+        "FastAPI",
+        "NumPy",
+        "Pandas"
+    }
+
+    for ent in doc.ents:
+
+        if ent.label_ not in ("GPE", "LOC"):
+            continue
+
+        location = ent.text.strip()
+
+        if len(location) < 3:
+            continue
+
+        if location in blacklist:
+            continue
+
+        locations.append(location)
+
+    locations = sorted(set(locations))
 
     return {
         "emails": emails,

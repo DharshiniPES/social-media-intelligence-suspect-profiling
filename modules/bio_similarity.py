@@ -7,6 +7,10 @@ model = SentenceTransformer(
 
 def bio_score(bio1, bio2):
 
+    bio1 = bio1 or ""
+
+    bio2 = bio2 or ""
+
     emb1 = model.encode([bio1])
 
     emb2 = model.encode([bio2])
