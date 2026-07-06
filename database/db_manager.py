@@ -3,14 +3,10 @@ import sqlite3
 
 class DatabaseManager:
 
-    def __init__(
-        self,
-        db_name="database/socmint.db"
-    ):
-
-        self.conn = sqlite3.connect(
-            db_name
-        )
+    def __init__(self, db_name="database/socmint.db"):
+        # 🔑 FIXED: check_same_thread=False allows Streamlit's multi-threaded runtime
+        # to query this database layout without throwing a ProgrammingError.
+        self.conn = sqlite3.connect(db_name, check_same_thread=False)
 
         self.cursor = self.conn.cursor()
 
@@ -57,12 +53,9 @@ class DatabaseManager:
         self.conn.commit()
 
     def insert_comparison(
-
         self,
-
         profile1,
         profile2,
-
         username_score,
         bio_score,
         stylometry_score,
@@ -72,11 +65,8 @@ class DatabaseManager:
         hashtag_score,
         behavior_score,   
         fusion_score,
-
         explanation,
-
         linked
-
     ):
 
         self.cursor.execute(
@@ -106,11 +96,9 @@ class DatabaseManager:
                 ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?
             )
             """,
-
             (
                 profile1,
                 profile2,
-
                 float(username_score),
                 float(bio_score),
                 float(stylometry_score),
@@ -120,9 +108,7 @@ class DatabaseManager:
                 float(hashtag_score),
                 float(behavior_score),
                 float(fusion_score),
-
                 str(explanation),
-
                 int(linked)
             )
         )
@@ -140,18 +126,9 @@ class DatabaseManager:
 
         return self.cursor.fetchall()
 
-    def save_note(
-
-        self,
-
-        account_id,
-
-        note
-
-    ):
+    def save_note(self, account_id, note):
 
         self.cursor.execute(
-
             """
             INSERT INTO investigator_notes(
 
@@ -163,10 +140,8 @@ class DatabaseManager:
 
             VALUES(?, ?)
             """,
-
             (
                 account_id,
-
                 note
             )
         )
@@ -176,7 +151,6 @@ class DatabaseManager:
     def get_notes(self):
 
         self.cursor.execute(
-
             """
             SELECT *
             FROM investigator_notes
