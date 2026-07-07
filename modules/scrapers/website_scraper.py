@@ -12,6 +12,7 @@ from modules.security_detector import analyze_security
 from urllib.parse import urlparse
 from modules.risk_analyzer import website_risk
 from modules.whois_detector import get_whois
+from modules.ssl_detector import get_ssl_info
 class WebsiteScraper:
 
     def __init__(self):
@@ -255,6 +256,7 @@ class WebsiteScraper:
             )
             security = analyze_security(final_url)
             whois_info = get_whois(final_url)
+            ssl_info = get_ssl_info(final_url)
             internal, external = self.classify_links(
 
                 links,
@@ -307,6 +309,8 @@ class WebsiteScraper:
                 "external_links": external,
 
                 "whois": whois_info,
+
+                "ssl": ssl_info,
 
             }
 

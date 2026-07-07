@@ -1,8 +1,12 @@
 import streamlit as st
 import pandas as pd
-
 import plotly.express as px
+
 from modules.scrapers.github_scraper import GitHubScraper
+from modules.scrapers.website_scraper import WebsiteScraper
+from modules.scrapers.instagram_scraper import InstagramScraper
+
+from dashboard.instagram_intelligence import InstagramIntelligence
 
 from pipeline.intelligence_pipeline import IntelligencePipeline
 
@@ -12,7 +16,7 @@ def show_live_intelligence():
     st.title("Live Intelligence")
 
     st.caption(
-        "Collect OSINT from public sources"
+        "Collect and analyze public intelligence from multiple OSINT sources."
     )
 
     source = st.selectbox(
@@ -25,6 +29,8 @@ def show_live_intelligence():
 
             "Website",
 
+            "Instagram",
+
             "Reddit"
 
         ]
@@ -32,22 +38,20 @@ def show_live_intelligence():
     )
 
     target = st.text_input(
-
         "Target"
-
     )
 
-    if st.button(
+    if st.button("Collect Intelligence"):
 
-        "Collect Intelligence"
+        pipeline = IntelligencePipeline()
 
-    ):
+        # ---------------------------------------------------------
+        # GitHub
+        # ---------------------------------------------------------
 
         if source == "GitHub":
 
             scraper = GitHubScraper()
-
-            pipeline = IntelligencePipeline()
 
             github = scraper.scrape(target)
 
@@ -57,14 +61,13 @@ def show_live_intelligence():
 
             st.session_state["live_evidence"] = evidence
 
+        # ---------------------------------------------------------
+        # Website
+        # ---------------------------------------------------------
 
         elif source == "Website":
 
-            from modules.scrapers.website_scraper import WebsiteScraper
-
             scraper = WebsiteScraper()
-
-            pipeline = IntelligencePipeline()
 
             website = scraper.scrape(target)
 
@@ -74,86 +77,150 @@ def show_live_intelligence():
 
             st.session_state["live_evidence"] = evidence
 
+        # ---------------------------------------------------------
+        # Instagram
+        # ---------------------------------------------------------
+
+        elif source == "Instagram":
+
+            scraper = InstagramScraper()
+
+            profile = scraper.scrape(target)
+
+            intelligence = InstagramIntelligence().analyze(profile)
+
+            normalized = pipeline.normalize_instagram(
+                intelligence
+            )
+
+            evidence = pipeline.run(
+                normalized
+            )
+
+            st.session_state["live_evidence"] = evidence
+
+        # ---------------------------------------------------------
+        # Reddit
+        # ---------------------------------------------------------
 
         else:
 
-            st.warning("Reddit integration coming soon.")
+            st.warning(
+                "Reddit Intelligence will be added in a future update."
+            )
 
-    if "live_evidence" in st.session_state:
+    if "live_evidence" not in st.session_state:
 
-        evidence = st.session_state["live_evidence"]
+        return
 
-        profile = evidence["metadata"]
+    evidence = st.session_state["live_evidence"]
 
-        source = evidence["source"]
+    profile = evidence["metadata"]
 
-        st.success("Collection Complete")
+    source = evidence["source"]
 
-        # =====================================================
-        # GITHUB DASHBOARD
-        # =====================================================
+    st.success("Collection Complete")
 
-        if source == "GitHub":
+    # ==========================================================
+    # GITHUB DASHBOARD
+    # ==========================================================
 
-            st.subheader("Executive Overview")
+    if source == "GitHub":
 
-            c1, c2, c3, c4, c5 = st.columns(5)
-            with c1:
-                st.metric("Emails", len(profile.get("emails", [])))
+        st.header("GitHub Intelligence")
 
-            with c2:
-                st.metric("Phones", len(profile.get("phones", [])))
+        c1, c2, c3, c4, c5 = st.columns(5)
 
-            with c3:
-                st.metric("Internal", len(profile.get("internal_links", [])))
+        with c1:
+            st.metric(
+                "Followers",
+                profile.get("followers", 0)
+            )
 
-            with c4:
-                st.metric("External", len(profile.get("external_links", [])))
+        with c2:
+            st.metric(
+                "Repositories",
+                len(profile.get("repositories", []))
+            )
 
-            with c5:
-                st.metric("Images", len(profile.get("images", [])))
+        with c3:
+            st.metric(
+                "Following",
+                profile.get("following", 0)
+            )
 
-            st.divider()
+        with c4:
+            st.metric(
+                "Public Repos",
+                profile.get("public_repos", 0)
+            )
 
-            left, right = st.columns([2,1])
+        with c5:
+            st.metric(
+                "Company",
+                "Yes" if profile.get("company") else "No"
+            )
 
-            with left:
+        st.divider()
 
-                st.subheader("Profile Intelligence")
+        left, right = st.columns([2, 1])
 
-                st.write(f"**Username:** {profile.get('username','')}")
-                st.write(f"**Name:** {profile.get('name','')}")
-                st.write(f"**Company:** {profile.get('company','')}")
-                st.write(f"**Location:** {profile.get('location','')}")
-                st.write(f"**Website:** {profile.get('blog','')}")
-                st.write(f"**Bio:** {profile.get('bio','')}")
+        with left:
 
-            with right:
+            st.subheader("Profile")
 
-                if profile.get("avatar"):
+            st.write(
+                f"**Username:** {profile.get('username','')}"
+            )
 
-                    st.image(
-                        profile["avatar"],
-                        use_container_width=True
-                    )
+            st.write(
+                f"**Name:** {profile.get('name','')}"
+            )
 
-            st.subheader("AI Intelligence Summary")
+            st.write(
+                f"**Company:** {profile.get('company','')}"
+            )
 
-            st.info(
+            st.write(
+                f"**Location:** {profile.get('location','')}"
+            )
 
-                profile.get(
+            st.write(
+                f"**Website:** {profile.get('blog','')}"
+            )
 
-                    "summary",
+            st.write(
+                f"**Bio:** {profile.get('bio','')}"
+            )
 
-                    "No summary available."
+        with right:
 
+            if profile.get("avatar"):
+
+                st.image(
+                    profile["avatar"],
+                    use_container_width=True
                 )
+
+        st.subheader("AI Summary")
+
+        st.info(
+
+            profile.get(
+
+                "summary",
+
+                "No summary available."
 
             )
 
-            st.subheader("Repository Intelligence")
+        )
 
-            repos = profile.get("repositories", [])
+        repos = profile.get("repositories", [])
+
+        if repos:
+
+            st.subheader("Repositories")
 
             repo_table = []
 
@@ -161,19 +228,19 @@ def show_live_intelligence():
 
                 repo_table.append({
 
-                    "Repository": repo["name"],
+                    "Repository": repo.get("name"),
 
-                    "Language": repo["language"],
+                    "Language": repo.get("language"),
 
-                    "Stars": repo["stars"],
+                    "Stars": repo.get("stars"),
 
-                    "Forks": repo["forks"]
+                    "Forks": repo.get("forks")
 
                 })
 
             st.dataframe(
 
-                repo_table,
+                pd.DataFrame(repo_table),
 
                 use_container_width=True,
 
@@ -185,7 +252,7 @@ def show_live_intelligence():
 
             for repo in repos:
 
-                language = repo["language"]
+                language = repo.get("language")
 
                 if language:
 
@@ -229,7 +296,7 @@ def show_live_intelligence():
 
                 repos,
 
-                key=lambda x: x["stars"],
+                key=lambda x: x.get("stars", 0),
 
                 reverse=True
 
@@ -259,260 +326,530 @@ def show_live_intelligence():
 
                 )
 
-        # =====================================================
-        # WEBSITE DASHBOARD
-        # =====================================================
+    # ==========================================================
+    # WEBSITE DASHBOARD
+    # ==========================================================
 
-        elif source == "Website":
+    elif source == "Website":
 
-            st.subheader("Website Intelligence")
+        st.header("Website Intelligence")
 
-            c1, c2, c3 = st.columns(3)
+        c1, c2, c3, c4 = st.columns(4)
 
-            with c1:
+        with c1:
+            st.metric(
+                "Emails",
+                len(profile.get("emails", []))
+            )
 
-                st.metric(
+        with c2:
+            st.metric(
+                "Phones",
+                len(profile.get("phones", []))
+            )
 
-                    "Emails",
+        with c3:
+            st.metric(
+                "URLs",
+                len(profile.get("urls", []))
+            )
 
-                    len(profile.get("emails", []))
+        with c4:
+            st.metric(
+                "Images",
+                len(profile.get("images", []))
+            )
 
-                )
+        st.divider()
 
-            with c2:
+        left, right = st.columns([2, 1])
 
-                st.metric(
-
-                    "Phones",
-
-                    len(profile.get("phones", []))
-
-                )
-
-            with c3:
-
-                st.metric(
-
-                    "URLs",
-
-                    len(profile.get("urls", []))
-
-                )
-
-            st.divider()
+        with left:
 
             st.subheader("Website Information")
 
             st.write(
-
                 f"**Title:** {profile.get('title','')}"
-
             )
 
             st.write(
-
                 f"**Description:** {profile.get('description','')}"
-
             )
 
-            st.subheader("Visible Text")
-
-            text = profile.get("visible_text", "")
-
-            preview = text[:1200]
-
-            st.text_area(
-
-                "Preview",
-
-                preview,
-
-                height=250
-
+            st.write(
+                f"**Risk Score:** {profile.get('risk_score','N/A')}"
             )
 
-            if len(text) > 1200:
+        with right:
 
-                with st.expander("Show Complete Text"):
+            technologies = profile.get("technologies", [])
 
-                    st.write(text)
-
-            st.subheader("Extracted Intelligence")
-
-            col1, col2 = st.columns(2)
-
-            with col1:
-
-                st.write("### Emails")
-
-                st.write(profile.get("emails", []))
-
-                st.write("### Phones")
-
-                st.write(profile.get("phones", []))
-
-            with col2:
-
-                st.write("### URLs")
-
-
-
-                urls = profile.get("urls", [])
-
-                if urls:
-
-                    df = pd.DataFrame({
-
-                        "URL": urls
-
-                    })
-
-                    st.dataframe(
-
-                        df,
-
-                        use_container_width=True,
-
-                        hide_index=True
-
-                    )
-
-                else:
-
-                    st.info("No URLs found.")
-
-                st.write("### Devices")
-
-                st.write(profile.get("devices", []))
-            st.subheader("Images")
-
-            images = profile.get("images", [])
-
-            if images:
-
-                cols = st.columns(3)
-
-                for i, img in enumerate(images[:9]):
-
-                    with cols[i % 3]:
-
-                        st.image(
-
-                            img,
-
-                            use_container_width=True
-
-                        )
-
-            else:
-
-                st.info("No images detected.")
-            st.subheader("Social Media")
-
-            social = profile.get("social_links", [])
-
-            if social:
-
-                for link in social:
-
-                    st.code(link)
-
-            else:
-
-                st.info("No social media links detected.")
             st.subheader("Technology Stack")
 
-            tech = profile.get("technologies", [])
+            if technologies:
 
-            if tech:
+                for tech in technologies:
 
-                cols = st.columns(3)
-
-                for i, t in enumerate(tech):
-
-                    with cols[i % 3]:
-
-                        st.success(t)
+                    st.success(tech)
 
             else:
 
                 st.info("No technologies detected.")
-            st.subheader("Security Headers")
 
-            security = profile.get("security", {})
+        st.divider()
 
-            if security:
+        st.subheader("Visible Content")
 
-                rows = []
+        text = profile.get(
+            "visible_text",
+            ""
+        )
 
-                for header, present in security.items():
+        st.text_area(
 
-                    rows.append({
+            "Preview",
 
-                        "Header": header,
+            text[:1500],
 
-                        "Present": "✅" if present else "❌"
+            height=250
 
-                    })
+        )
 
-                df = pd.DataFrame(rows)
+        if len(text) > 1500:
+
+            with st.expander(
+                "Show Complete Text"
+            ):
+
+                st.write(text)
+
+        st.divider()
+
+        left, right = st.columns(2)
+
+        with left:
+
+            st.subheader("Emails")
+
+            emails = profile.get("emails", [])
+
+            if emails:
 
                 st.dataframe(
 
-                    df,
+                    pd.DataFrame({
 
-                    use_container_width=True,
+                        "Email": emails
 
-                    hide_index=True
+                    }),
+
+                    hide_index=True,
+
+                    use_container_width=True
 
                 )
 
             else:
 
-                st.info("No security information available.")
-            st.subheader("WHOIS Intelligence")
+                st.info("No emails found.")
 
-            whois = profile.get("whois", {})
+            st.subheader("Phones")
 
-            if whois:
+            phones = profile.get("phones", [])
 
-                rows = []
-
-                for key, value in whois.items():
-
-                    rows.append({
-
-                        "Field": key.replace("_", " ").title(),
-
-                        "Value": value
-
-                    })
-
-                df = pd.DataFrame(rows)
+            if phones:
 
                 st.dataframe(
 
-                    df,
+                    pd.DataFrame({
 
-                    use_container_width=True,
+                        "Phone": phones
 
-                    hide_index=True
+                    }),
+
+                    hide_index=True,
+
+                    use_container_width=True
 
                 )
 
             else:
 
-                st.info("WHOIS information unavailable.")
-            st.subheader("Detected Locations")
+                st.info("No phone numbers found.")
 
-            st.write(
+        with right:
 
-                profile.get(
+            st.subheader("URLs")
 
-                    "locations",
+            urls = profile.get("urls", [])
 
-                    []
+            if urls:
+
+                st.dataframe(
+
+                    pd.DataFrame({
+
+                        "URL": urls
+
+                    }),
+
+                    hide_index=True,
+
+                    use_container_width=True
 
                 )
+
+            else:
+
+                st.info("No URLs detected.")
+
+            st.subheader("Locations")
+
+            locations = profile.get("locations", [])
+
+            if locations:
+
+                st.dataframe(
+
+                    pd.DataFrame({
+
+                        "Location": locations
+
+                    }),
+
+                    hide_index=True,
+
+                    use_container_width=True
+
+                )
+
+            else:
+
+                st.info("No locations detected.")
+
+        st.divider()
+
+        st.subheader("Social Media Links")
+
+        social = profile.get(
+            "social_links",
+            []
+        )
+
+        if social:
+
+            st.dataframe(
+
+                pd.DataFrame({
+
+                    "Link": social
+
+                }),
+
+                hide_index=True,
+
+                use_container_width=True
 
             )
+
+        else:
+
+            st.info(
+                "No social links detected."
+            )
+
+        st.divider()
+
+        st.subheader("Security Headers")
+
+        security = profile.get(
+            "security",
+            {}
+        )
+
+        if security:
+
+            rows = []
+
+            for header, value in security.items():
+
+                rows.append({
+
+                    "Header": header,
+
+                    "Present": "Yes" if value else "No"
+
+                })
+
+            st.dataframe(
+
+                pd.DataFrame(rows),
+
+                hide_index=True,
+
+                use_container_width=True
+
+            )
+
+        else:
+
+            st.info(
+                "Security header information unavailable."
+            )
+
+        st.subheader("WHOIS Information")
+
+        whois = profile.get("whois", {})
+
+        if whois:
+
+            st.dataframe(
+
+                pd.DataFrame(
+
+                    list(whois.items()),
+
+                    columns=["Field", "Value"]
+
+                ),
+
+                hide_index=True,
+
+                use_container_width=True
+
+            )
+
+        else:
+
+            st.info("WHOIS unavailable.")
+
+        st.subheader("SSL Certificate")
+
+        ssl = profile.get("ssl", {})
+
+        if ssl:
+
+            st.dataframe(
+
+                pd.DataFrame(
+
+                    list(ssl.items()),
+
+                    columns=["Field", "Value"]
+
+                ),
+
+                hide_index=True,
+
+                use_container_width=True
+
+            )
+
+        else:
+
+            st.info("SSL information unavailable.")
+
+        st.subheader("Images")
+
+        images = profile.get(
+            "images",
+            []
+        )
+
+        if images:
+
+            cols = st.columns(3)
+
+            for i, img in enumerate(images[:9]):
+
+                with cols[i % 3]:
+
+                    st.image(
+
+                        img,
+
+                        use_container_width=True
+
+                    )
+
+        else:
+
+            st.info("No images detected.")   
+    # ==========================================================
+    # INSTAGRAM DASHBOARD
+    # ==========================================================
+
+    elif source == "Instagram":
+
+        st.header("Instagram Intelligence")
+
+        c1, c2, c3, c4 = st.columns(4)
+
+        with c1:
+            st.metric(
+                "Followers",
+                profile.get("followers", "N/A")
+            )
+
+        with c2:
+            st.metric(
+                "Following",
+                profile.get("following", "N/A")
+            )
+
+        with c3:
+            st.metric(
+                "Posts",
+                profile.get("posts_count", "N/A")
+            )
+
+        with c4:
+            st.metric(
+                "Intelligence Score",
+                profile.get("intelligence_score", 0)
+            )
+
+        st.divider()
+
+        left, right = st.columns([2, 1])
+
+        with left:
+
+            st.subheader("Profile Information")
+
+            st.write(f"**Username:** {profile.get('username', '')}")
+
+            st.write(f"**Display Name:** {profile.get('display_name', '')}")
+
+            st.write(f"**Bio:** {profile.get('bio', '')}")
+
+            st.write(f"**Profile URL:** {profile.get('url', '')}")
+
+            st.write(f"**Canonical URL:** {profile.get('canonical_url', '')}")
+
+        with right:
+
+            if profile.get("profile_picture"):
+
+                st.image(
+                    profile["profile_picture"],
+                    caption=profile.get("display_name", ""),
+                    use_container_width=True
+                )
+
+        st.divider()
+
+        st.subheader("Profile Metadata")
+
+        col1, col2 = st.columns(2)
+
+        with col1:
+
+            st.write("**Followers**")
+            st.info(profile.get("followers", "N/A"))
+
+            st.write("**Following**")
+            st.info(profile.get("following", "N/A"))
+
+            st.write("**Posts**")
+            st.info(profile.get("posts_count", "N/A"))
+
+        with col2:
+
+            st.write("**Emails**")
+            st.write(profile.get("emails", []))
+
+            st.write("**Phones**")
+            st.write(profile.get("phones", []))
+
+        st.divider()
+
+        st.subheader("External Domains")
+
+        domains = profile.get("external_domains", [])
+
+        if domains:
+
+            st.dataframe(
+                pd.DataFrame({
+                    "Domain": domains
+                }),
+                hide_index=True,
+                use_container_width=True
+            )
+
+        else:
+
+            st.info("No external domains detected.")
+
+        st.subheader("Risk Indicators")
+
+        risks = profile.get("risk_flags", [])
+
+        if risks:
+
+            st.dataframe(
+                pd.DataFrame({
+                    "Indicator": risks
+                }),
+                hide_index=True,
+                use_container_width=True
+            )
+
+        else:
+
+            st.success("No risk indicators detected.")
+
+        st.divider()
+
+        st.subheader("Pivot Analysis")
+
+        pivots = evidence["analysis"]["pivots"]
+
+        col1, col2 = st.columns(2)
+
+        with col1:
+
+            st.write("### Emails")
+            st.write(pivots.get("emails", []))
+
+            st.write("### Phones")
+            st.write(pivots.get("phones", []))
+
+            st.write("### URLs")
+            st.write(pivots.get("urls", []))
+
+        with col2:
+
+            st.write("### Devices")
+            st.write(pivots.get("devices", []))
+
+            st.write("### Locations")
+            st.write(pivots.get("locations", []))
+
+        st.divider()
+
+        st.subheader("Metadata")
+
+        metadata = profile.get("metadata", {})
+
+        if metadata:
+
+            rows = []
+
+            for key, value in metadata.items():
+
+                rows.append({
+                    "Field": key,
+                    "Value": str(value)[:250]
+                })
+
+            st.dataframe(
+                pd.DataFrame(rows),
+                hide_index=True,
+                use_container_width=True
+            )
+
+        else:
+
+            st.info("No metadata available.")

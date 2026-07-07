@@ -8,14 +8,18 @@ Purpose
 Normalizes every intelligence source into one
 common evidence object.
 """
+
 from modules.pivot_analyzer import extract_advanced_pivots
+
 
 class IntelligencePipeline:
 
     def __init__(self):
-
         pass
 
+    # ---------------------------------------------------------
+    # GitHub
+    # ---------------------------------------------------------
 
     def normalize_github(self, github):
 
@@ -25,11 +29,11 @@ class IntelligencePipeline:
 
             "identity": {
 
-                "username": github.get("username")or "",
+                "username": github.get("username") or "",
 
-                "name": github.get("name")or "",
+                "name": github.get("name") or "",
 
-                "bio": github.get("bio")or ""
+                "bio": github.get("bio") or ""
 
             },
 
@@ -53,10 +57,13 @@ class IntelligencePipeline:
 
             "metadata": github,
 
-            "status": github["status"]
+            "status": github.get("status")
 
         }
 
+    # ---------------------------------------------------------
+    # Website
+    # ---------------------------------------------------------
 
     def normalize_website(self, website):
 
@@ -68,19 +75,68 @@ class IntelligencePipeline:
 
                 "username": "",
 
-                "name": website.get("title"),
+                "name": website.get("title") or "",
 
-                "bio": website.get("description")
+                "bio": website.get("description") or ""
 
             },
 
-            "content": website.get("visible_text"),
+            "content": website.get("visible_text") or "",
 
             "metadata": website,
 
             "status": website.get("status")
 
         }
+
+    # ---------------------------------------------------------
+    # Instagram
+    # ---------------------------------------------------------
+
+    def normalize_instagram(self, instagram):
+
+        content = " ".join([
+
+            instagram.get("display_name") or "",
+
+            instagram.get("bio") or "",
+
+            " ".join(instagram.get("hashtags", [])),
+
+            " ".join(instagram.get("mentions", [])),
+
+            " ".join(instagram.get("emails", [])),
+
+            " ".join(instagram.get("phones", []))
+
+        ])
+
+        return {
+
+            "source": "Instagram",
+
+            "identity": {
+
+                "username": instagram.get("username") or "",
+
+                "name": instagram.get("display_name") or "",
+
+                "bio": instagram.get("bio") or ""
+
+            },
+
+            "content": content,
+
+            "metadata": instagram,
+
+            "status": instagram.get("status")
+
+        }
+
+    # ---------------------------------------------------------
+    # Evidence Package
+    # ---------------------------------------------------------
+
     def build_evidence_package(self, normalized):
 
         return {
@@ -110,6 +166,11 @@ class IntelligencePipeline:
             }
 
         }
+
+    # ---------------------------------------------------------
+    # Pivot Analysis
+    # ---------------------------------------------------------
+
     def run_pivot_analysis(self, evidence):
 
         pivots = extract_advanced_pivots(
@@ -121,6 +182,11 @@ class IntelligencePipeline:
         evidence["analysis"]["pivots"] = pivots
 
         return evidence
+
+    # ---------------------------------------------------------
+    # Run Pipeline
+    # ---------------------------------------------------------
+
     def run(self, normalized):
 
         evidence = self.build_evidence_package(
