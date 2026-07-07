@@ -68,17 +68,17 @@ class IntelligencePipeline:
 
                 "username": "",
 
-                "name": website["title"],
+                "name": website.get("title"),
 
-                "bio": website["description"]
+                "bio": website.get("description")
 
             },
 
-            "content": website["visible_text"],
+            "content": website.get("visible_text"),
 
             "metadata": website,
 
-            "status": website["status"]
+            "status": website.get("status")
 
         }
     def build_evidence_package(self, normalized):

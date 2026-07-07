@@ -300,8 +300,6 @@ class WebsiteScraper:
 
                 "technologies": technologies,
 
-                "technologies": technologies,
-
                 "security": security,
 
                 "internal_links": internal,
