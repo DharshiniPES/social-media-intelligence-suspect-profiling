@@ -4,9 +4,10 @@ import plotly.express as px
 
 from modules.scrapers.github_scraper import GitHubScraper
 from modules.scrapers.website_scraper import WebsiteScraper
-from modules.scrapers.instagram_scraper import InstagramScraper
+from dotenv import load_dotenv
 
-from dashboard.instagram_intelligence import InstagramIntelligence
+
+
 
 from pipeline.intelligence_pipeline import IntelligencePipeline
 
@@ -83,14 +84,22 @@ def show_live_intelligence():
 
         elif source == "Instagram":
 
-            scraper = InstagramScraper()
+            from modules.scrapers.creatorcrawl_instagram import CreatorCrawlInstagram
+            from dashboard.instagram_intelligence import InstagramIntelligence
+
+            import os
+            
+            load_dotenv()
+            API_KEY = os.getenv("CREATORCRAWL_API_KEY")
+
+            scraper = CreatorCrawlInstagram(API_KEY)
 
             profile = scraper.scrape(target)
 
-            intelligence = InstagramIntelligence().analyze(profile)
+            profile = InstagramIntelligence().analyze(profile)
 
             normalized = pipeline.normalize_instagram(
-                intelligence
+                profile
             )
 
             evidence = pipeline.run(
@@ -728,18 +737,148 @@ def show_live_intelligence():
             st.write(f"**Canonical URL:** {profile.get('canonical_url', '')}")
 
         with right:
-
+            
             if profile.get("profile_picture"):
 
-                st.image(
-                    profile["profile_picture"],
-                    caption=profile.get("display_name", ""),
-                    use_container_width=True
-                )
+                import requests
+                from io import BytesIO
+
+                pfp = profile.get("profile_picture")
+
+                if pfp:
+
+                    try:
+
+                        response = requests.get(
+                            pfp,
+                            headers={
+                                "User-Agent": (
+                                    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
+                                    "AppleWebKit/537.36 (KHTML, like Gecko) "
+                                    "Chrome/138.0 Safari/537.36"
+                                ),
+                                "Referer": "https://www.instagram.com/"
+                            },
+                            timeout=20
+                        )
+
+                        if response.status_code == 200:
+                            st.image(
+                                BytesIO(response.content),
+                                width=180
+                            )
+                        else:
+                            st.warning("Profile picture unavailable.")
+
+                    except Exception as e:
+                        st.warning(e)
 
         st.divider()
 
-        st.subheader("Profile Metadata")
+        # ---------------------------------------------------------
+        # Recent Posts
+        # ---------------------------------------------------------
+
+        st.subheader("Recent Posts")
+
+        posts = profile.get("posts", [])
+
+        if not posts:
+
+            st.info("No recent posts available.")
+
+        else:
+
+            for index, post in enumerate(posts[:10]):
+
+                with st.expander(f"Post {index + 1}", expanded=(index == 0)):
+
+                    media = post.get("media", [])
+
+                    if media:
+
+                        first = media[0]
+
+                        image_url = (
+                            first.get("thumbnail_url")
+                            or first.get("url")
+                        )
+
+                        if image_url:
+                            
+                            import requests
+                            from io import BytesIO
+
+                            try:
+                                response = requests.get(
+                                    image_url,
+                                    headers={
+                                        "User-Agent": (
+                                            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
+                                            "AppleWebKit/537.36 (KHTML, like Gecko) "
+                                            "Chrome/138.0 Safari/537.36"
+                                        ),
+                                        "Referer": "https://www.instagram.com/"
+                                    },
+                                    timeout=20
+                                )
+
+                                if response.status_code == 200:
+                                    st.image(
+                                        BytesIO(response.content),
+                                        use_container_width=True
+                                    )
+                                else:
+                                    st.warning(f"Image could not be loaded ({response.status_code})")
+
+                            except Exception as e:
+                                st.warning(f"Image Error: {e}")
+
+                    col1, col2, col3 = st.columns(3)
+
+                    with col1:
+                        st.metric(
+                            "Likes",
+                            post.get("like_count", 0)
+                        )
+
+                    with col2:
+                        st.metric(
+                            "Comments",
+                            post.get("comment_count", 0)
+                        )
+
+                    with col3:
+                        st.metric(
+                            "Views",
+                            post.get("view_count", 0)
+                        )
+
+                    st.write(
+                        "**Created:**",
+                        post.get("created_at", "Unknown")
+                    )
+
+                    st.write(
+                        "**Type:**",
+                        post.get("type", "Unknown")
+                    )
+
+                    caption = (
+                        post.get("text")
+                        or post.get("caption")
+                        or ""
+                    )
+
+                    if caption:
+
+                        st.write("### Caption")
+
+                        st.write(caption)
+
+        st.divider()
+
+        st.subheader("Metadata")
 
         col1, col2 = st.columns(2)
 

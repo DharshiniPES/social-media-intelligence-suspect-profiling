@@ -14,12 +14,35 @@ class InstagramIntelligence:
         # Preserve Profile Information
         # -------------------------------------------------
 
-        intelligence["display_name"] = profile.get("display_name")
-        intelligence["bio"] = profile.get("bio")
-        intelligence["followers"] = profile.get("followers")
-        intelligence["following"] = profile.get("following")
-        intelligence["posts_count"] = profile.get("posts_count")
-        intelligence["profile_picture"] = profile.get("profile_picture")
+        fields_to_preserve = [
+
+            "username",
+            "display_name",
+            "bio",
+            "url",
+            "profile_picture",
+
+            "followers",
+            "following",
+            "posts_count",
+
+            "verified",
+            "verified_tier",
+
+            "external_url",
+            "private",
+            "business",
+            "platform",
+
+            "posts",
+            "raw_api",
+            "status"
+
+        ]
+
+        for field in fields_to_preserve:
+
+            intelligence[field] = profile.get(field)
 
         # -------------------------------------------------
         # Email Extraction
@@ -35,7 +58,7 @@ class InstagramIntelligence:
         intelligence["emails"] = emails
 
         # -------------------------------------------------
-        # Instagram does not reliably expose phone numbers
+        # Phones
         # -------------------------------------------------
 
         intelligence["phones"] = []
@@ -116,7 +139,6 @@ class InstagramIntelligence:
         for word in suspicious_words:
 
             if word in searchable_text:
-
                 risk_flags.append(word)
 
         intelligence["risk_flags"] = sorted(set(risk_flags))
@@ -152,5 +174,7 @@ class InstagramIntelligence:
             "risk_flags": len(risk_flags)
 
         }
+
+        print("Posts before return:", len(intelligence.get("posts", [])))
 
         return intelligence

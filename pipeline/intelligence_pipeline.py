@@ -92,7 +92,6 @@ class IntelligencePipeline:
     # ---------------------------------------------------------
     # Instagram
     # ---------------------------------------------------------
-
     def normalize_instagram(self, instagram):
 
         content = " ".join([
@@ -128,6 +127,8 @@ class IntelligencePipeline:
             "content": content,
 
             "metadata": instagram,
+
+            "posts": instagram.get("posts", []),
 
             "status": instagram.get("status")
 
