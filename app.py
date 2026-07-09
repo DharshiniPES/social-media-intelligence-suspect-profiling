@@ -7,6 +7,7 @@ import seaborn as sns
 import os
 import re
 from dashboard.live_intelligence import show_live_intelligence
+from dashboard.profile_comparison import show_profile_comparison
 # =====================================================
 # PAGE CONFIG
 # =====================================================
@@ -236,99 +237,81 @@ st.sidebar.caption("Investigator Intelligence Platform")
 st.sidebar.divider()
 
 # -------------------------
-# Executive
+# BIFURCATED NAVIGATION ENGINE
 # -------------------------
-
-section = st.sidebar.radio(
-    "Workspace",
+app_mode = st.sidebar.radio(
+    "Select System Engine",
     [
-        "Executive Dashboard",
-        "Investigation",
-        "Analytics",
-        "OSINT Tools",
-        "Reports"
+        "Historical Dataset Analytics",
+        "Live OSINT Ingestion & Profiling"
     ]
 )
 
-# -------------------------
-# Executive Pages
-# -------------------------
+st.sidebar.divider()
 
-if section == "Executive Dashboard":
-
-    page = st.sidebar.radio(
-        "Pages",
-        [   "Investigation Command Center",
-            "Live Intelligence",
-            "Case Summary",
-            "Profile Analysis",
-            "Identity Linkage Results",
-            
+if app_mode == "Historical Dataset Analytics":
+    section = st.sidebar.radio(
+        "Dataset Workspace",
+        [
+            "Executive Dashboard",
+            "Investigation",
+            "Analytics",
+            "Reports"
         ]
     )
 
-# -------------------------
-# Investigation
-# -------------------------
+    if section == "Executive Dashboard":
+        page = st.sidebar.radio(
+            "Pages",
+            [
+                "Case Summary",
+                "Profile Analysis",
+                "Identity Linkage Results"
+            ]
+        )
+    elif section == "Investigation":
+        page = st.sidebar.radio(
+            "Pages",
+            [
+                "Evidence Explorer",
+                "Investigation Narrative",
+                "Investigator Notes",
+                "Community Detection",
+                "Community Risk Ranking",
+                "Identity Linkage Network",
+                "Network Centrality Ranking",
+                "Risk Assesment",
+                "Account Risk Ranking"
+            ]
+        )
+    elif section == "Analytics":
+        page = st.sidebar.radio(
+            "Pages",
+            [
+                "Feature Contribution Analysis",
+                "Correlation Heatmap",
+                "System Evaluation"
+            ]
+        )
+    else:
+        page = st.sidebar.radio(
+            "Pages",
+            [
+                "Investigation Reports",
+                "Export Investigation Package"
+            ]
+        )
 
-elif section == "Investigation":
-
+elif app_mode == "Live OSINT Ingestion & Profiling":
     page = st.sidebar.radio(
-        "Pages",
+        "Live OSINT Workspace",
         [
-            "Evidence Explorer",
-            "Investigation Narrative",
-            "Investigator Notes",
-            "Community Detection",
-            "Community Risk Ranking",
-            "Identity Linkage Network",
-            "Network Centrality Ranking",
-            "Risk Assesment",
-            "Account Risk Ranking"
-        ]
-    )
-
-# -------------------------
-# Analytics
-# -------------------------
-
-elif section == "Analytics":
-
-    page = st.sidebar.radio(
-        "Pages",
-        [
-            "Feature Contribution Analysis",
-            "Correlation Heatmap",
-            "System Evaluation"
-        ]
-    )
-
-# -------------------------
-# OSINT
-# -------------------------
-
-elif section == "OSINT Tools":
-
-    page = st.sidebar.radio(
-        "Pages",
-        [
+            "Investigation Command Center",
             "Live Target Web Scraper",
             "Multimodal OCR Extractor",
-            "Vehicle RC/DL Verification"
-        ]
-    )
-
-# -------------------------
-# Reports
-# -------------------------
-
-else:
-
-    page = st.sidebar.radio(
-        "Pages",
-        [
-            "Investigation Reports",
-            "Export Investigation Package"
+            "Vehicle RC/DL Verification",
+            "Live Intelligence",
+            "Profile Comparison"
         ]
     )
 
@@ -682,111 +665,7 @@ if page == "Investigation Command Center":
             else:
 
                 st.error("Unable to scrape target.")
-    # ============================================
-    # VEHICLE LOOKUP
-    # ============================================
-    with tab_vehicle:
-        if detected == "Vehicle":
 
-            with st.spinner("Verifying vehicle..."):
-
-                result = verify_and_route_vehicle(query)
-
-            if result["verified"]:
-                    
-                st.success("Vehicle verified")
-
-                st.json(result["metadata"])
-
-            else:
-
-                st.error(result["message"])
-    # ============================================
-    # LIVE SCRAPER
-    # ============================================
-
-        elif detected == "URL":
-
-            with st.spinner("Collecting public profile..."):
-
-                scraped = live_scrape_profile(query)
-
-            if scraped:
-
-                left, right = st.columns(2)
-
-                with left:
-
-                    st.subheader("Page Title")
-
-                    st.info(scraped["scraped_name"])
-
-                with right:
-
-                    st.subheader("Description")
-
-                    st.write(scraped["scraped_bio"])
-
-            else:
-
-                st.warning("Unable to scrape target.")
-    # ============================================
-    # PROFILE SEARCH
-    # ============================================
-
-        with tab_search:
-
-            if detected not in ["Vehicle", "URL"]:
-
-                matches = []
-
-                for profile in profiles:
-
-                    text = " ".join([
-
-                        profile["username"],
-
-                        profile.get("bio", ""),
-
-                        profile.get("posts", "")
-
-                    ]).lower()
-
-                    if query.lower() in text:
-
-                        matches.append(profile)
-
-                st.subheader("Search Results")
-
-                if not matches:
-
-                    st.warning("No matching profile found.")
-
-                for profile in matches:
-
-                    with st.container(border=True):
-
-                        left, right = st.columns([3, 1])
-
-                        with left:
-
-                            st.subheader(profile["username"])
-
-                            st.write(f"Followers : {profile['followers']}")
-
-                            st.write(f"Verified : {profile['verified']}")
-
-                        with right:
-
-                            st.metric(
-
-                                "Bot",
-
-                                profile["bot_label"]
-
-                            )
-
-                        st.write(profile["posts"][:250] + "...")
         with tab_ocr:
 
             st.subheader("Multimodal OCR Intelligence")
@@ -967,7 +846,9 @@ if page == "Investigation Command Center":
 elif page == "Live Intelligence":
 
     show_live_intelligence()
-if page == "Case Summary":
+elif page == "Profile Comparison":
+    show_profile_comparison()
+elif page == "Case Summary":
 
     st.markdown(
     """
@@ -2539,119 +2420,6 @@ Links : {len(profile['links'])}
 
     st.divider()
     # =====================================================
-    # EVIDENCE INTELLIGENCE GRID
-    # =====================================================
-
-    st.subheader("Extracted Intelligence")
-
-    email_col, phone_col, domain_col = st.columns(3)
-
-    with email_col:
-
-        st.markdown("#### Emails")
-
-        if pivots["emails"]:
-
-            for email in pivots["emails"]:
-
-                st.code(email)
-
-        else:
-
-            st.caption("No emails detected")
-
-    with phone_col:
-
-        st.markdown("#### Phone Numbers")
-
-        if pivots["phones"]:
-
-            for phone in pivots["phones"]:
-
-                st.code(phone)
-
-        else:
-
-            st.caption("No phone numbers detected")
-
-    with domain_col:
-
-        st.markdown("#### Domains")
-
-        domains = []
-
-        for url in pivots["urls"]:
-
-            try:
-
-                domain = url.split("/")[2]
-
-                if domain not in domains:
-
-                    domains.append(domain)
-
-            except Exception:
-
-                pass
-
-        if domains:
-
-            for domain in domains:
-
-                st.code(domain)
-
-        else:
-
-            st.caption("No domains detected")
-
-    st.write("")
-
-    url_col, device_col, location_col = st.columns(3)
-
-    with url_col:
-
-        st.markdown("#### URLs")
-
-        if pivots["urls"]:
-
-            for url in pivots["urls"]:
-
-                st.code(url)
-
-        else:
-
-            st.caption("No URLs detected")
-
-    with device_col:
-
-        st.markdown("#### Devices")
-
-        if pivots["devices"]:
-
-            for device in pivots["devices"]:
-
-                st.code(device)
-
-        else:
-
-            st.caption("No devices detected")
-
-    with location_col:
-
-        st.markdown("#### Locations")
-
-        if pivots["locations"]:
-
-            for location in pivots["locations"]:
-
-                st.code(location)
-
-        else:
-
-            st.caption("No locations detected")
-
-    st.divider()
-    # =====================================================
     # LINKED IDENTITIES
     # =====================================================
 
@@ -2855,44 +2623,10 @@ Overall assessment indicates this account should be reviewed by an investigator 
         st.write("### Raw Profile JSON")
 
         st.json(profile)
-# ==========================
-# 16. INVESTIGATION NARRATIVE
-# ==========================
-elif page == "Investigation Narrative":
-    st.title("Investigation Narrative")
-    if len(comparisons) == 0:
-        st.warning("No comparison data available.")
-    else:
-        best_match = max(comparisons, key=lambda row: row[11])
-        narrative = f"""INVESTIGATION SUMMARY\n\nAccount Pair: {best_match[1]} ↔ {best_match[2]}
-        \n• Username: {round(best_match[3],3)} | Bio: {round(best_match[4],3)}
-        \n• Stylometry: {round(best_match[5],3)} | Emoji: {round(best_match[6],3)}
-        \n• Temporal: {round(best_match[7],3)} | Hyperlink: {round(best_match[8],3)}
-        \n• Hashtag: {round(best_match[9],3)} | Behavior: {round(best_match[10],3)}
-        \n\nFusion Score: {round(best_match[11],3)}\n\nAssessment indicates identity linkage alignment."""
-        st.text_area("Generated Narrative", narrative, height=500)
 
-# ==========================
-# 17. EXPORT INVESTIGATION PACKAGE
-# ==========================
-elif page == "Export Investigation Package":
-    st.title("Export Investigation Package")
-    if st.button("Generate Case Package"):
-        os.makedirs("reports", exist_ok=True)
-        total_profiles, total_comparisons = len(profiles), len(comparisons)
-        linked_accounts = sum(1 for row in comparisons if row[13] == 1)
-        highest_fusion = max(row[11] for row in comparisons) if comparisons else 0.0
-
-        with open("reports/case_summary.txt", "w", encoding="utf-8") as f:
-            f.write(f"SOCMINT PROFILE EXPORT\nProfiles: {total_profiles}\nLinked: {linked_accounts}\nMax Fusion: {highest_fusion}")
-        
-        linked_df = pd.DataFrame([{"Profile1": r[1], "Profile2": r[2], "Score": r[11]} for r in comparisons if r[13] == 1])
-        linked_df.to_csv("reports/linked_accounts.csv", index=False)
-        st.success("Case package generated successfully inside reports/ folder.")
-
-# ==========================
-# --- FORENSIC INTERFACES ---
-# ==========================
+# =====================================================
+# LIVE FORENSIC TOOLS MODULES
+# =====================================================
 elif page == "Live Target Web Scraper":
     st.title("Controlled Target Profile Scraper")
     st.markdown("Simulate direct client HTTP headers to query public handles when access points are rate-limited.")

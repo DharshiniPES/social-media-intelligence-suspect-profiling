@@ -87,6 +87,9 @@ class CreatorCrawlInstagram:
         print("=" * 80)
         import pprint
 
-        pprint.pp(profile["posts"][0])
+        if profile.get("posts"):
+            pprint.pp(profile["posts"][0])
+        else:
+            print("No posts returned.")
 
         return profile

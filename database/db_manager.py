@@ -1,6 +1,5 @@
 import sqlite3
 
-
 class DatabaseManager:
 
     def __init__(self, db_name="database/socmint.db"):
@@ -8,11 +7,9 @@ class DatabaseManager:
         # to query this database layout without throwing a ProgrammingError.
         self.conn = sqlite3.connect(db_name, check_same_thread=False)
 
-        self.cursor = self.conn.cursor()
-
     def create_tables(self):
-
-        self.cursor.execute(
+        cursor = self.conn.cursor()  # Spawn a fresh, thread-safe cursor
+        cursor.execute(
             """
             CREATE TABLE IF NOT EXISTS comparisons(
 
@@ -37,7 +34,7 @@ class DatabaseManager:
             """
         )
 
-        self.cursor.execute(
+        cursor.execute(
             """
             CREATE TABLE IF NOT EXISTS investigator_notes(
 
@@ -68,8 +65,8 @@ class DatabaseManager:
         explanation,
         linked
     ):
-
-        self.cursor.execute(
+        cursor = self.conn.cursor()  # Spawn a fresh, thread-safe cursor
+        cursor.execute(
             """
             INSERT INTO comparisons(
 
@@ -116,19 +113,19 @@ class DatabaseManager:
         self.conn.commit()
 
     def get_comparisons(self):
-
-        self.cursor.execute(
+        cursor = self.conn.cursor()  # Spawn a fresh, thread-safe cursor
+        cursor.execute(
             """
             SELECT *
             FROM comparisons
             """
         )
 
-        return self.cursor.fetchall()
+        return cursor.fetchall()
 
     def save_note(self, account_id, note):
-
-        self.cursor.execute(
+        cursor = self.conn.cursor()  # Spawn a fresh, thread-safe cursor
+        cursor.execute(
             """
             INSERT INTO investigator_notes(
 
@@ -149,12 +146,12 @@ class DatabaseManager:
         self.conn.commit()
 
     def get_notes(self):
-
-        self.cursor.execute(
+        cursor = self.conn.cursor()  # Spawn a fresh, thread-safe cursor
+        cursor.execute(
             """
             SELECT *
             FROM investigator_notes
             """
         )
 
-        return self.cursor.fetchall()
+        return cursor.fetchall()

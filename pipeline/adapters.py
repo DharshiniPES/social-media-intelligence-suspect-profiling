@@ -1,21 +1,23 @@
-"""
-Adapters
+from datetime import datetime
 
-Converts intelligence collected from different
-sources into a common profile format.
-"""
+def evidence_to_behavior_profile(evidence):
+    """
+    Convert EvidenceProfile into the format expected by
+    behavioral_fingerprint.py
+    """
 
+    active_hours = []
 
-def github_to_profile(github):
-
-    text = github.get("summary", "")
+    for ts in evidence.timestamps:
+        try:
+            active_hours.append(
+                datetime.fromisoformat(ts).hour
+            )
+        except:
+            pass
 
     return {
-
-        "posts": text,
-
-        "active_hours": [12],
-
-        "hashtags": []
-
+        "posts": " ".join(evidence.captions),
+        "active_hours": active_hours or [0],
+        "hashtags": evidence.hashtags
     }
