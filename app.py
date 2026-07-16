@@ -8,11 +8,27 @@ import os
 import re
 from dashboard.live_intelligence import show_live_intelligence
 from dashboard.profile_comparison import show_profile_comparison
-
+from pipeline.search_pipeline import SearchPipeline
+from pipeline.ranking_pipeline import RankingPipeline
+from pipeline.normalizer import normalize_instagram
+from modules.scrapers.instagram_collector import InstagramCollector
+from database.candidate_repository import CandidateRepository
+from modules.candidate_retrieval.retrieval_engine import CandidateRetrievalEngine
+from modules.candidate_pool.pool_builder import CandidatePoolBuilder
+from modules.deduplication.deduplicator import CandidateDeduplicator
 # =====================================================
 # PAGE CONFIG
 # =====================================================
+def safe_progress(value):
+    value = float(value)
 
+    if value < 0:
+        value = 0
+
+    if value > 1:
+        value = 1
+
+    return value
 st.set_page_config(
     page_title="SOCMINT Investigation Platform",
     page_icon="🛡",
@@ -256,7 +272,8 @@ elif app_mode == "Live OSINT Ingestion & Profiling":
     page = st.sidebar.radio(
         "Live OSINT Workspace",
         [
-            "Investigation Command Center",
+            
+            "One-to-Many Investigator Search",
             "Live Target Web Scraper",
             "Multimodal OCR Extractor",
             "Vehicle RC/DL Verification",
@@ -2178,7 +2195,243 @@ elif page == "Vehicle RC/DL Verification":
                 st.markdown("### Gateway Diagnostic Logs:")
                 for log in v_res["metadata"]["Gateway Error Trails"]:
                     st.error(log)
+# New Tab
+elif page == "One-to-Many Investigator Search":
+    st.title("One-to-Many Investigator Search")
 
+    st.markdown(
+        "Search and correlate identities across multiple OSINT platforms."
+    )
+
+    st.divider()
+
+    username = st.text_input(
+        "Target Username",
+        placeholder="Enter username..."
+    )
+
+    col1, col2, col3 = st.columns(3)
+
+    with col1:
+        use_instagram = st.checkbox(
+            "Instagram",
+            value=True
+        )
+
+    with col2:
+        use_github = st.checkbox(
+            "GitHub",
+            value=True
+        )
+
+    with col3:
+        use_website = st.checkbox(
+            "Website",
+            value=True
+        )
+
+    start = st.button(
+        "Start Investigation",
+        use_container_width=True
+    )
+    if start:
+
+        platforms = []
+
+        if use_instagram:
+            platforms.append("Instagram")
+
+        if use_github:
+            platforms.append("GitHub")
+
+        if use_website:
+            platforms.append("Website")
+
+        with st.spinner("Running Investigation..."):
+
+            # ----------------------------------------
+            # Collect target profile
+            # ----------------------------------------
+
+            target_raw = InstagramCollector().scrape(username)
+
+            target = normalize_instagram(target_raw)
+
+            # ----------------------------------------
+            # Live collection
+            # ----------------------------------------
+
+            SearchPipeline.search(
+                username,
+                platforms
+            )
+
+            # ----------------------------------------
+            # Load repository
+            # ----------------------------------------
+
+            repo = CandidateRepository()
+
+            live_profiles = SearchPipeline.search(
+                username,
+                platforms
+            )
+
+            repo = CandidateRepository()
+
+            repository_profiles = repo.get_all()
+
+            candidate_pool = CandidatePoolBuilder.build(
+
+                live_profiles,
+
+                repository_profiles
+
+            )
+
+            candidate_pool = CandidateDeduplicator.deduplicate(
+
+                candidate_pool
+
+            )
+
+            retrieved = CandidateRetrievalEngine.retrieve(
+
+                target,
+
+                candidate_pool,
+
+                top_k=100
+
+            )
+
+            results = RankingPipeline.rank(
+
+                target,
+
+                retrieved
+
+            )
+        repo = CandidateRepository()
+
+        high = sum(1 for r in results if r["fusion_score"] >= 0.80)
+        medium = sum(1 for r in results if 0.50 <= r["fusion_score"] < 0.80)
+        low = sum(1 for r in results if r["fusion_score"] < 0.50)
+
+        st.markdown("## 🕵 Investigation Summary")
+
+        c1, c2, c3, c4 = st.columns(4)
+
+        with c1:
+            st.metric(
+                "Repository",
+                repo.count()
+            )
+
+        with c2:
+            st.metric(
+                "Candidates",
+                len(results)
+            )
+
+        with c3:
+            st.metric(
+                "High Confidence",
+                high
+            )
+
+        with c4:
+            st.metric(
+                "Rejected / Low",
+                low
+            )
+
+        st.divider()
+        import pandas as pd
+
+        rows = []
+
+        for r in results:
+
+            rows.append({
+
+                "Username": r["candidate"].username,
+
+                "Platform": r["candidate"].platform,
+
+                "Fusion (%)": round(
+                    r["fusion_score"] * 100,
+                    2
+                )
+
+            })
+
+        df = pd.DataFrame(rows)
+
+        st.markdown("## 🎯 Top Matches")
+
+        for i, candidate in enumerate(results[:10]):
+
+            score = float(candidate["fusion_score"])
+
+            if score >= 0.90:
+                badge = "🟢 HIGH"
+
+            elif score >= 0.70:
+                badge = "🟡 MEDIUM"
+
+            elif score >= 0.40:
+                badge = "🟠 LOW"
+
+            else:
+                badge = "🔴 REJECT"
+
+            with st.container(border=True):
+
+                c1, c2 = st.columns([3,1])
+
+                with c1:
+
+                    st.subheader(
+                        f"#{i+1}  {candidate['candidate'].username}"
+                    )
+
+                    st.caption(
+                        candidate["candidate"].platform
+                    )
+
+                with c2:
+
+                    st.metric(
+                        badge,
+                        f"{score*100:.1f}%"
+                    )
+
+                st.progress(score)
+                col1, col2 = st.columns(2)
+
+                with col1:
+
+                    st.write("Username")
+                    st.progress(safe_progress(candidate["username_score"]))
+
+                    st.write("Bio")
+                    st.progress(safe_progress(candidate["bio_score"]))
+
+                    st.write("Stylometry")
+                    st.progress(safe_progress(candidate["stylometry_score"]))
+
+                with col2:
+
+                    st.write("Behaviour")
+                    st.progress(safe_progress(candidate["behaviour_score"]))
+
+                    st.write("Temporal")
+                    st.progress(safe_progress(candidate["temporal_score"]))
+
+                    st.write("Hyperlinks")
+                    st.progress(safe_progress(candidate["hyperlink_score"]))
+                st.write(candidate["explanation"])
 # =====================================================
 # CROSS-PLATFORM COMPARISON (NEW TAB ADDED)
 # =====================================================

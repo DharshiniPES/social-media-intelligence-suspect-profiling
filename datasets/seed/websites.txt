@@ -1,0 +1,10 @@
+google.com
+microsoft.com
+openai.com
+tesla.com
+apple.com
+amazon.com
+netflix.com
+spotify.com
+github.com
+nasa.gov

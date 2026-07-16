@@ -152,3 +152,74 @@ def normalize_instagram(profile_data):
     evidence.raw_data = profile_data
 
     return evidence
+def normalize_github(profile_data):
+    """
+    Normalize GitHub intelligence into EvidenceProfile.
+    """
+
+    evidence = EvidenceProfile()
+
+    evidence.platform = "GitHub"
+
+    evidence.username = profile_data.get("username", "")
+    evidence.display_name = profile_data.get("name", "")
+    evidence.bio = profile_data.get("bio") or ""
+    evidence.profile_url = profile_data.get("profile_url", "")
+    evidence.profile_image = profile_data.get("avatar", "")
+
+    evidence.followers = profile_data.get("followers", 0)
+    evidence.following = profile_data.get("following", 0)
+    evidence.posts_count = profile_data.get("public_repos", 0)
+
+    repositories = profile_data.get("repositories", [])
+
+    evidence.posts = repositories
+
+    for repo in repositories:
+
+        description = repo.get("description") or ""
+        evidence.captions.append(description)
+
+        if repo.get("language"):
+            evidence.hashtags.append(repo["language"])
+
+        if repo.get("topics"):
+            evidence.hashtags.extend(repo["topics"])
+
+    if profile_data.get("blog"):
+        evidence.hyperlinks.append(profile_data["blog"])
+
+    if profile_data.get("email"):
+        evidence.emails.append(profile_data["email"])
+
+    evidence.raw_data = profile_data
+
+    return evidence
+def normalize_website(profile_data):
+    """
+    Normalize Website intelligence into EvidenceProfile.
+    """
+
+    evidence = EvidenceProfile()
+
+    evidence.platform = "Website"
+
+    evidence.username = profile_data.get("domain", "")
+    evidence.display_name = profile_data.get("title", "")
+    evidence.bio = profile_data.get("description", "")
+
+    evidence.profile_url = profile_data.get("url", "")
+
+    evidence.hyperlinks.extend(
+        profile_data.get("links", [])
+    )
+
+    evidence.emails.extend(
+        profile_data.get("emails", [])
+    )
+
+    evidence.posts = []
+
+    evidence.raw_data = profile_data
+
+    return evidence
