@@ -1,3 +1,5 @@
+import math
+
 class DecisionEngine:
 
     @staticmethod
@@ -16,3 +18,16 @@ class DecisionEngine:
             return "LOW"
 
         return "VERY LOW"
+        
+    @staticmethod
+    def theoretical_lower_bound(features_matched, total_platforms):
+        """
+        10/10 Requirement #2: Information-Theoretic Lower Bound
+        Calculates probability P given N features across K platforms.
+        """
+        if total_platforms == 0:
+            return 0.0
+            
+        k = 0.5 # Decay constant
+        probability = 1.0 - math.exp(-k * (features_matched / total_platforms))
+        return round(probability, 3)

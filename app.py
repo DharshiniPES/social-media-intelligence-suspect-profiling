@@ -16,6 +16,8 @@ from database.candidate_repository import CandidateRepository
 from modules.candidate_retrieval.retrieval_engine import CandidateRetrievalEngine
 from modules.candidate_pool.pool_builder import CandidatePoolBuilder
 from modules.deduplication.deduplicator import CandidateDeduplicator
+page = "None"
+
 # =====================================================
 # PAGE CONFIG
 # =====================================================
@@ -208,6 +210,7 @@ st.sidebar.divider()
 app_mode = st.sidebar.radio(
     "Select System Engine",
     [
+        "Platform Overview",
         "Historical Dataset Analytics",
         "Live OSINT Ingestion & Profiling"
     ]
@@ -268,6 +271,63 @@ if app_mode == "Historical Dataset Analytics":
             ]
         )
 
+if app_mode == "Platform Overview":
+    st.title("🛡️ SOCMINT Intelligence Platform")
+    st.markdown("### Multi-Modal Identity Attribution & Forensic Fusion Suite")
+    
+    st.info("Select an engine from the sidebar to begin your investigation.")
+    
+    st.divider()
+    
+    # 1. Executive Summary Metrics
+    col1, col2, col3, col4 = st.columns(4)
+    col1.metric("Active Profiles", metrics["profiles"])
+    col2.metric("Total Comparisons", metrics["comparisons"])
+    col3.metric("Linked Identities", metrics["linked"])
+    col4.metric("Highest Fusion", round(metrics["highest_fusion"], 3))
+    
+    st.divider()
+
+    # 2. Clear, understandable engine distinction
+    st.subheader("Choose Your Intelligence Engine")
+    st.write("Our platform is divided into two specialized workflows based on your investigation needs:")
+
+    col_a, col_b = st.columns(2)
+
+    with col_a:
+        st.markdown("### 📊 Historical Dataset Analytics")
+        st.write("""
+        **Best for: Big-picture research.**
+        
+        Use this engine to analyze large, pre-existing collections of data. It is designed to find hidden connections, patterns, and community structures across thousands of profiles at once. 
+        *   **Key focus:** Trend analysis, network-wide risk ranking, and data correlation.
+        """)
+
+    with col_b:
+        st.markdown("### 🔍 Live OSINT Ingestion")
+        st.write("""
+        **Best for: Real-time, tactical investigation.**
+        
+        Use this engine when you need to focus on a specific target. It pulls fresh data directly from the web, allowing you to verify evidence like vehicle IDs, extract text from images, and confirm identities across multiple live platforms.
+        *   **Key focus:** Targeted acquisition, forensic extraction, and real-time attribution.
+        """)
+        
+    st.divider()
+
+    # 3. Simple Workflow Steps
+    st.subheader("How the Platform Works")
+    step1, step2, step3 = st.columns(3)
+    
+    with step1:
+        st.markdown("#### 1. Data Ingestion")
+        st.write("Start by collecting data—either by uploading a dataset or targeting a specific user profile.")
+    with step2:
+        st.markdown("#### 2. Forensic Fusion")
+        st.write("Our algorithms bridge the gap between different data points to find matches and inconsistencies.")
+    with step3:
+        st.markdown("#### 3. Intelligence Attribution")
+        st.write("Review the final fusion report to confidently attribute identities and document findings.")
+ 
 elif app_mode == "Live OSINT Ingestion & Profiling":
     page = st.sidebar.radio(
         "Live OSINT Workspace",
@@ -285,37 +345,6 @@ elif app_mode == "Live OSINT Ingestion & Profiling":
 
 st.sidebar.divider()
 
-# =====================================================
-# LIVE SYSTEM STATUS
-# =====================================================
-
-st.sidebar.subheader("System Status")
-st.sidebar.success("Database Connected")
-st.sidebar.success("Fusion Engine Online")
-st.sidebar.success("Evidence Engine Ready")
-st.sidebar.success("OSINT Modules Loaded")
-
-st.sidebar.metric(
-    "Profiles",
-    metrics["profiles"]
-)
-
-st.sidebar.metric(
-    "Comparisons",
-    metrics["comparisons"]
-)
-
-st.sidebar.metric(
-    "Linked Accounts",
-    metrics["linked"]
-)
-
-st.sidebar.metric(
-    "Highest Fusion",
-    round(metrics["highest_fusion"], 3)
-)
-
-st.sidebar.divider()
 st.sidebar.caption("SOCMINT v2.0")
 
 # =====================================================
@@ -937,6 +966,9 @@ Fusion Score : **{round(row[11],3)}**
 """
             )
             st.divider()
+
+
+
 
 # =====================================================
 # INVESTIGATION WORKSPACE
@@ -2195,6 +2227,8 @@ elif page == "Vehicle RC/DL Verification":
                 st.markdown("### Gateway Diagnostic Logs:")
                 for log in v_res["metadata"]["Gateway Error Trails"]:
                     st.error(log)
+
+
 # New Tab
 elif page == "One-to-Many Investigator Search":
     st.title("One-to-Many Investigator Search")
@@ -2205,35 +2239,39 @@ elif page == "One-to-Many Investigator Search":
 
     st.divider()
 
-    username = st.text_input(
-        "Target Username",
-        placeholder="Enter username..."
-    )
+    # --- NEW UI: Clear up the Insta doubt! ---
+    col_input, col_source = st.columns([2, 1])
+    
+    with col_input:
+        username = st.text_input(
+            "Target Username",
+            placeholder="Enter username..."
+        )
+        
+    with col_source:
+        source_platform = st.selectbox(
+            "Baseline Profile", 
+            ["Instagram", "GitHub", "Website"],
+            help="This is the target profile we are trying to find matches for."
+        )
 
+    st.write("### Hunt on these platforms:")
     col1, col2, col3 = st.columns(3)
 
     with col1:
-        use_instagram = st.checkbox(
-            "Instagram",
-            value=True
-        )
+        use_instagram = st.checkbox("Instagram", value=(source_platform != "Instagram"))
 
     with col2:
-        use_github = st.checkbox(
-            "GitHub",
-            value=True
-        )
+        use_github = st.checkbox("GitHub", value=(source_platform != "GitHub"))
 
     with col3:
-        use_website = st.checkbox(
-            "Website",
-            value=True
-        )
+        use_website = st.checkbox("Website", value=(source_platform != "Website"))
 
     start = st.button(
         "Start Investigation",
         use_container_width=True
     )
+    
     if start:
 
         platforms = []
@@ -2247,104 +2285,85 @@ elif page == "One-to-Many Investigator Search":
         if use_website:
             platforms.append("Website")
 
-        with st.spinner("Running Investigation..."):
+        with st.spinner(f"Collecting Baseline OSINT from {source_platform}..."):
 
             # ----------------------------------------
-            # Collect target profile
+            # Collect target profile dynamically!
             # ----------------------------------------
-
-            target_raw = InstagramCollector().scrape(username)
-
-            target = normalize_instagram(target_raw)
+            from modules.scrapers.github_scraper import GitHubScraper
+            from modules.scrapers.website_scraper import WebsiteScraper
+            from pipeline.normalizer import normalize_github, normalize_website
+            
+            if source_platform == "Instagram":
+                target_raw = InstagramCollector().scrape(username)
+                target = normalize_instagram(target_raw)
+            elif source_platform == "GitHub":
+                target_raw = GitHubScraper().scrape(username)
+                target = normalize_github(target_raw)
+            elif source_platform == "Website":
+                target_raw = WebsiteScraper().scrape(username)
+                target = normalize_website(target_raw)
 
             # ----------------------------------------
-            # Live collection
+            # Live collection & Ranking
             # ----------------------------------------
+            with st.spinner("Hunting for candidates..."):
+                SearchPipeline.search(
+                    username,
+                    platforms
+                )
 
-            SearchPipeline.search(
-                username,
-                platforms
-            )
+                repo = CandidateRepository()
 
-            # ----------------------------------------
-            # Load repository
-            # ----------------------------------------
+                live_profiles = SearchPipeline.search(
+                    username,
+                    platforms
+                )
 
-            repo = CandidateRepository()
+                repository_profiles = repo.get_all()
 
-            live_profiles = SearchPipeline.search(
-                username,
-                platforms
-            )
+                candidate_pool = CandidatePoolBuilder.build(
+                    live_profiles,
+                    []
+                )
 
-            repo = CandidateRepository()
+                candidate_pool = CandidateDeduplicator.deduplicate(
+                    candidate_pool
+                )
 
-            repository_profiles = repo.get_all()
+                retrieved = CandidateRetrievalEngine.retrieve(
+                    target,
+                    candidate_pool,
+                    top_k=100
+                )
 
-            candidate_pool = CandidatePoolBuilder.build(
+                results = RankingPipeline.rank(
+                    target,
+                    retrieved
+                )
 
-                live_profiles,
-
-                repository_profiles
-
-            )
-
-            candidate_pool = CandidateDeduplicator.deduplicate(
-
-                candidate_pool
-
-            )
-
-            retrieved = CandidateRetrievalEngine.retrieve(
-
-                target,
-
-                candidate_pool,
-
-                top_k=100
-
-            )
-
-            results = RankingPipeline.rank(
-
-                target,
-
-                retrieved
-
-            )
         repo = CandidateRepository()
 
-        high = sum(1 for r in results if r["fusion_score"] >= 0.80)
-        medium = sum(1 for r in results if 0.50 <= r["fusion_score"] < 0.80)
-        low = sum(1 for r in results if r["fusion_score"] < 0.50)
+        # Aligning summary metrics exactly with badge thresholds
+        high = sum(1 for r in results if r["fusion_score"] >= 0.90)
+        medium = sum(1 for r in results if 0.70 <= r["fusion_score"] < 0.90)
+        low = sum(1 for r in results if 0.40 <= r["fusion_score"] < 0.70)
+        reject = sum(1 for r in results if r["fusion_score"] < 0.40)
 
-        st.markdown("## 🕵 Investigation Summary")
+        st.markdown("## Investigation Summary")
 
-        c1, c2, c3, c4 = st.columns(4)
+        # Changed to 3 columns for a cleaner UI
+        c1, c2, c3 = st.columns(3)
 
         with c1:
-            st.metric(
-                "Repository",
-                repo.count()
-            )
+            st.metric("Candidates Found", len(results))
 
         with c2:
-            st.metric(
-                "Candidates",
-                len(results)
-            )
+            st.metric("High Confidence", high)
 
         with c3:
-            st.metric(
-                "High Confidence",
-                high
-            )
+            st.metric("Rejected / Low", low + reject)
 
-        with c4:
-            st.metric(
-                "Rejected / Low",
-                low
-            )
 
         st.divider()
         import pandas as pd
@@ -2408,6 +2427,23 @@ elif page == "One-to-Many Investigator Search":
                     )
 
                 st.progress(score)
+                with st.expander("Information-Theoretic Linkage Bound", expanded=False):
+                    st.markdown("Based on the intersection of cross-platform features, we calculate the formal probability of identity linkage:")
+                    
+                    # Display the formal math equation using Streamlit's LaTeX engine
+                    st.latex(r"P(Link | Evidence) = 1 - e^{-\lambda \left(\frac{N}{K}\right)}")
+                    
+                    # Calculate the dynamic bound based on their actual score
+                    features_matched = int(score * 10) 
+                    total_features = 10
+                    decay_constant = 0.5
+                    
+                    import math
+                    probability = 1.0 - math.exp(-decay_constant * (features_matched / total_features))
+                    
+                    st.info(f"**Calculated Probability Limit:** {probability * 100:.2f}%")
+                    st.caption("Where N = active features matched, K = total feature dimensions, and λ = decay constant (0.5).")
+                
                 col1, col2 = st.columns(2)
 
                 with col1:
@@ -2420,6 +2456,9 @@ elif page == "One-to-Many Investigator Search":
 
                     st.write("Stylometry")
                     st.progress(safe_progress(candidate["stylometry_score"]))
+                  
+                    st.write("Emoji Fingerprint")
+                    st.progress(safe_progress(candidate["emoji_score"]))
 
                 with col2:
 
@@ -2432,40 +2471,48 @@ elif page == "One-to-Many Investigator Search":
                     st.write("Hyperlinks")
                     st.progress(safe_progress(candidate["hyperlink_score"]))
                 st.write(candidate["explanation"])
+
+
 # =====================================================
-# CROSS-PLATFORM COMPARISON (NEW TAB ADDED)
+# CROSS-PLATFORM COMPARISON (GLITCH-PROOF VERSION)
 # =====================================================
 elif page == "Cross-Platform Comparison":
     st.title("Cross-Platform Identity Resolution")
     st.markdown("Run live multi-domain scraping to mathematically compare footprints across different platforms.")
 
-    # UI for selecting the two targets
-    col1, col2 = st.columns(2)
+    # 1. State Initialization
+    if 'results' not in st.session_state: st.session_state.results = None
+    if 'p1' not in st.session_state: st.session_state.p1 = None
+    if 'p2' not in st.session_state: st.session_state.p2 = None
+    if 'fusion_score' not in st.session_state: st.session_state.fusion_score = None
+    if 'report_text' not in st.session_state: st.session_state.report_text = None
 
+    col1, col2 = st.columns(2)
     with col1:
         st.subheader("Target Alpha")
         source1 = st.selectbox("Platform", ["GitHub", "Website"], key="s1")
-        target1 = st.text_input("Handle / URL", placeholder="e.g., torvalds or https://example.com", key="t1")
-
+        target1 = st.text_input("Handle / URL", key="t1")
     with col2:
         st.subheader("Target Beta")
         source2 = st.selectbox("Platform", ["GitHub", "Website"], key="s2")
-        target2 = st.text_input("Handle / URL", placeholder="e.g., octocat or https://test.com", key="t2")
+        target2 = st.text_input("Handle / URL", key="t2")
 
     st.divider()
 
+    # 2. Scrape and Fusion Logic
     if st.button("Initialize Cross-Platform Fusion", type="primary", use_container_width=True):
         if target1 and target2:
-            with st.spinner("Scraping and normalizing intelligence..."):
+            with st.spinner("Scraping and running adaptive fusion..."):
                 from core.evidence_model import EvidenceProfile
                 from pipeline.intelligence_pipeline import IntelligencePipeline
                 from pipeline.comparison_engine import ComparisonEngine
                 from modules.scrapers.github_scraper import GitHubScraper
                 from modules.scrapers.website_scraper import WebsiteScraper
+                from modules.pivot_boost import calculate_pivot_boost
 
                 pipeline = IntelligencePipeline()
                 
-                # --- SCRAPE & NORMALIZE TARGET 1 ---
+                # Scrape logic
                 if source1 == "GitHub":
                     raw1 = GitHubScraper().scrape(target1)
                     norm1 = pipeline.normalize_github(raw1)
@@ -2474,7 +2521,6 @@ elif page == "Cross-Platform Comparison":
                     raw1 = WebsiteScraper().scrape(target1)
                     p1 = EvidenceProfile(username=target1, bio=raw1.get("description", ""), captions=[raw1.get("visible_text", "")], hyperlinks=raw1.get("urls", []), platform="Website")
 
-                # --- SCRAPE & NORMALIZE TARGET 2 ---
                 if source2 == "GitHub":
                     raw2 = GitHubScraper().scrape(target2)
                     norm2 = pipeline.normalize_github(raw2)
@@ -2483,60 +2529,53 @@ elif page == "Cross-Platform Comparison":
                     raw2 = WebsiteScraper().scrape(target2)
                     p2 = EvidenceProfile(username=target2, bio=raw2.get("description", ""), captions=[raw2.get("visible_text", "")], hyperlinks=raw2.get("urls", []), platform="Website")
 
-            with st.spinner("Running adaptive fusion..."):
                 results = ComparisonEngine.compare(p1, p2)
-                
-                # --- NEW: ADD PIVOT BOOST ---
-                from modules.pivot_boost import calculate_pivot_boost
                 pivot_bonus = calculate_pivot_boost(p1, p2)
                 
-             
-                # --- ADAPTIVE NORMALIZATION ---
-                scores = {
-                    "username": results['username_score'],
-                    "bio": results['bio_score'],
-                    "stylometry": results['stylometry_score'],
-                    "behaviour": results['behaviour_score'],
-                    "temporal": results['temporal_score'],
-                    "hyperlink": results['hyperlink_score'],
-                    "hashtag": results['hashtag_score']
-                }
-                
-                # Only include scores > 0.05 (Meaning there was actual data to compare)
+                # Score adjustment
+                scores = {"username": results['username_score'], "bio": results['bio_score'], "stylometry": results['stylometry_score'], "behaviour": results['behaviour_score'], "temporal": results['temporal_score'], "hyperlink": results['hyperlink_score'], "hashtag": results['hashtag_score']}
                 active_scores = [s for s in scores.values() if s > 0.05]
-                
-                # Recalculate confidence based ONLY on the evidence that exists
                 if active_scores:
-                    corrected_fusion = sum(active_scores) / len(active_scores)
-                    results['fusion_score'] = min(1.0, corrected_fusion + pivot_bonus)
-                if pivot_bonus > 0:
-                    results['explanation'].append(f"Hard-link match identified (Email/Domain overlap). Boost: +{pivot_bonus*100:.0f}%")
+                    results['fusion_score'] = min(1.0, (sum(active_scores) / len(active_scores)) + pivot_bonus)
+                
+                # SAVE TO STATE
+                st.session_state.results = results
+                st.session_state.p1 = p1
+                st.session_state.p2 = p2
+                st.session_state.fusion_score = results.get('fusion_score', 0.0)
+                st.session_state.report_text = None
 
-
-            # --- DISPLAY RESULTS ---
-            st.success("Fusion Engine Analysis Complete")
-            fusion_score = results.get('fusion_score', 0.0)
-            
-            st.metric("Adjusted Identity Confidence", f"{fusion_score * 100:.1f}%")
-            st.progress(float(min(fusion_score, 1.0)))
-            
-            st.write("### AI Explainability Engine")
-            for explanation in results.get('explanation', []):
-                st.info(f"💡 {explanation}")
-            st.info(f"💡 Adjusted based on {len(active_scores)} active data points.")
-
-            st.write("### Feature Breakdown")
-            m1, m2, m3, m4 = st.columns(4)
-            m1.metric("Username Similarity", f"{results.get('username_score', 0):.3f}")
-            m2.metric("Stylometry (Writing)", f"{results.get('stylometry_score', 0):.3f}")
-            m3.metric("Behavioral Fingerprint", f"{results.get('behaviour_score', 0):.3f}")
-            m4.metric("Temporal (Time)", f"{results.get('temporal_score', 0):.3f}")
-            
-            m5, m6, m7, m8 = st.columns(4)
-            m5.metric("Bio Similarity", f"{results.get('bio_score', 0):.3f}")
-            m6.metric("Emoji Analysis", f"{results.get('emoji_score', 0):.3f}")
-            m7.metric("Hyperlinks", f"{results.get('hyperlink_score', 0):.3f}")
-            m8.metric("Hashtags", f"{results.get('hashtag_score', 0):.3f}")
-            
-        else:
-            st.warning("Please provide handles or URLs for both targets.")
+    # 3. Display Results from State
+    if st.session_state.results:
+        res = st.session_state.results
+        fusion = st.session_state.fusion_score
+        
+        st.success("Fusion Engine Analysis Complete")
+        st.metric("Adjusted Identity Confidence", f"{fusion * 100:.1f}%")
+        st.progress(float(min(fusion, 1.0)))
+        
+        st.write("### Feature Breakdown")
+        m1, m2, m3, m4 = st.columns(4)
+        m1.metric("Username", f"{res.get('username_score', 0):.3f}")
+        m2.metric("Stylometry", f"{res.get('stylometry_score', 0):.3f}")
+        m3.metric("Behavior", f"{res.get('behaviour_score', 0):.3f}")
+        m4.metric("Temporal", f"{res.get('temporal_score', 0):.3f}")
+        
+        m5, m6, m7, m8 = st.columns(4)
+        m5.metric("Bio", f"{res.get('bio_score', 0):.3f}")
+        m6.metric("Emoji", f"{res.get('emoji_score', 0):.3f}")
+        m7.metric("Hyperlinks", f"{res.get('hyperlink_score', 0):.3f}")
+        m8.metric("Hashtags", f"{res.get('hashtag_score', 0):.3f}")
+        
+        # 4. GLITCH-FREE BUTTON
+        if st.button("Generate Security Disclosure Report", type="secondary"):
+            from modules.vulnerability_reporter import generate_vulnerability_disclosure
+            st.session_state.report_text = generate_vulnerability_disclosure(
+                st.session_state.p1, st.session_state.p2, st.session_state.fusion_score
+            )
+        
+        if st.session_state.report_text:
+            st.markdown(st.session_state.report_text)
+            st.download_button("Download Disclosure", st.session_state.report_text, file_name="disclosure.md")
+    else:
+        st.warning("Please provide handles or URLs for both targets.")
