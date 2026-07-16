@@ -1,10 +1,10 @@
-# STYLE-TRACE: Unified SOCMINT Intelligence Platform
+# Adaptive Identity Correlation at Scale: Explainable Multi-Modal SOCMINT for Real-Time Investigations
 
 ## 📌 Executive Summary
-STYLE-TRACE is an automated, multi-modal pipeline designed to correlate digital footprints across disparate platforms. By integrating custom scraping engines with a proprietary Adaptive Fusion Engine, the system bridges the gap between raw data collection and high-confidence identity resolution, providing a systematic approach to lawful suspect profiling in OSINT environments.
+This project offers an automatic multi-modal solution that aims at correlating digital identities through different platforms by merging custom scraping engines and a proprietary adaptive fusion engine into one system for solving a problem of going from data to confident identity resolution to achieve lawful profiling of suspects in OSINT scenarios.
 
 ## 🗺️ System Architecture
-The platform utilizes a layered forensic pipeline designed for scalability and forensic integrity.
+The platform uses a hierarchical forensic pipeline that is scalable and maintains forensic integrity.
 
 ```mermaid
 graph TD
@@ -27,11 +27,11 @@ To ensure reproducibility for reviewers, this tool supports containerized deploy
    ```
 2. **Build the image:**
    ```bash
-   docker build -t style-trace .
+   docker build -t adaptive-identity-correlation .
    ```
 3. **Run the container:**
    ```bash
-   docker run -p 8501:8501 style-trace
+   docker run -p 8501:8501 adaptive-identity-correlation
    ```
 4. **Access the interface:** Navigate to `http://localhost:8501` in your browser.
 
@@ -46,8 +46,8 @@ To ensure reproducibility for reviewers, this tool supports containerized deploy
 ## 🔬 Technical Deep Dive
 
 ### Core Innovations
-*   **Reliability Masking:** Prevents "Zero-Padding Penalties" by dynamically assessing evidence density, ensuring missing data fields do not artificially deflate confidence scores.
-*   **Pivot-Based Boosting:** Identifies "Hard Links" (e.g., identical emails, linked portfolios) and applies a logarithmic confidence boost, shifting outputs from similarity-based prediction to evidence-based linkage.
+*   **Reliability Masking:** Ensures that “Zero-Padding Penalties” cannot occur through the dynamic evaluation of evidence density, where blank data fields cannot artificially reduce the confidence level.
+*   **Pivot-Based Boosting:** Looks for “Hard Links” (e.g. same emails, linked portfolios) and boosts the confidence level through logarithm, moving from similarity-based predictions to evidence-based linking.
 
 ### Performance Validation
 
@@ -72,7 +72,8 @@ To ensure reproducibility for reviewers, this tool supports containerized deploy
 *   **Project Mentor:** Dr. Sapna V M, Dept. of Computer Science, PES University
 
 ## ⚖️ Ethical Disclaimer
-This tool is a research prototype developed exclusively for the lawful correlation of open-source OSINT information. It is intended for use in academic and investigative research contexts. The project strictly adheres to the boundaries of publicly accessible data and does not engage in unauthorized access, privacy infringement, or illegal data retrieval methods.
+This project is a prototype designed only for the legal analysis of open-source OSINT data. It was created for research purposes only. The project stays within the scope of openly available data only and does not perform any actions that could be considered unauthorized access, data breach, or any other activity that goes against laws.
+
 
 ---
 *Documentation last updated: July 2026*
