@@ -39,9 +39,9 @@ To ensure reproducibility for reviewers, this tool supports containerized deploy
 1. **Install dependencies:** `pip install -r requirements.txt`
 2. **Launch Application:** `streamlit run app.py`
 
-## 🎥 Demo Walkthrough
-[Click here to watch the full system demonstration](https://placeholder-url.com)
-*(Placeholder: Replace with your YouTube/Loom link once the video is uploaded)*
+## 🎥 Google Drive Link
+[Click here for supportive documents including demo walkthrough](https://drive.google.com/drive/folders/1I66WuWng597tKydaXFF6JVb0AUqY4Wca?usp=drive_link)
+
 
 ## 🔬 Technical Deep Dive
 
