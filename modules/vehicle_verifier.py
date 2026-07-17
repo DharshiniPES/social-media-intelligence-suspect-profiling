@@ -23,7 +23,14 @@ def verify_and_route_vehicle(registration_number):
         }
 
     # API key selection sequence (Environment variable fallback to active portal token)
-    api_key = os.getenv("RAPIDAPI_KEY") or "eda06071d4msh152ccd994bab478p1d9559jsn987c9f075367"
+    api_key = os.getenv("RAPIDAPI_KEY") 
+    if not api_key:
+            return {
+                "status": "Configuration Error",
+                "message": "RAPIDAPI_KEY not found in system environment variables.",
+                "verified": False,
+                "metadata": {}
+            }
 
     url = "https://rto-vehicle-details5.p.rapidapi.com/address"
 
