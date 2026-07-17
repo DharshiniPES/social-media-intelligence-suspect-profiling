@@ -39,6 +39,59 @@ To ensure reproducibility for reviewers, this tool supports containerized deploy
 1. **Install dependencies:** `pip install -r requirements.txt`
 2. **Launch Application:** `streamlit run app.py`
 
+
+### Workflow Visualization
+```text
+Historical Dataset
+          │
+          ▼
+    Dataset Ingestion & Parsing
+          │
+          ▼
+Profile Extraction & Identity Mapping
+          │
+          ▼
+Multi-Modal Evidence Correlation
+    ├── Username Similarity
+    ├── Bio Similarity
+    ├── Stylometry
+    ├── Temporal Behaviour
+    ├── Behavioural Fingerprinting
+    ├── Emoji Analysis
+    ├── Hyperlink Analysis
+    └── Hashtag Analysis
+          │
+          ▼
+    Adaptive Evidence Fusion Engine
+          │
+          ▼
+    Explainable Risk Assessment
+          │
+          ▼
+Community Detection & Network Analysis
+          │
+          ▼
+    Analytics & Report Generation
+          │
+          ▼
+    Live Intelligence Module
+          │
+    ┌────────┬─────────────┬
+    ▼        ▼             ▼
+  GitHub  Instagram     Website
+Intelligence Intelligence Intelligence
+    └────────┬─────────────┘
+             ▼
+    Profile Comparison Engine
+             │
+             ▼
+Cross-Platform Identity Resolution
+             │
+             ▼
+   Security Disclosure Generation
+```
+
+
 ## 🎥 Google Drive Link
 [Click here for supportive documents including demo walkthrough](https://drive.google.com/drive/folders/1I66WuWng597tKydaXFF6JVb0AUqY4Wca?usp=drive_link)
 
